@@ -1,0 +1,35 @@
+============================================================
+           USER GUIDELINE - BRKH AUTO FLOW V.1
+============================================================
+
+PENTING: Ikuti prosedur ini agar proses automasi berjalan lancar!
+
+1. PERSIAPAN AWAL
+   - Pastikan lu sudah login ke akun Google Labs.
+   - Klik tombol [Buka Flow Workspace] pada extension.
+
+2. PROSEDUR WAJIB (PROYEK MANUAL)
+   - Setelah tab Google Flow terbuka, lu WAJIB klik [+ New Project] 
+     atau buka project secara MANUAL terlebih dahulu.
+   - Pilih mode [Image] di dalam workspace.
+   - Robot tidak akan jalan kalau lu belum masuk ke editor workspace-nya.
+
+3. PENGGUNAAN EXTENSION
+   - Masukkan daftar prompt lu (.txt file atau paste manual).
+   - Gunakan [Style Modifiers] (Pills) untuk hasil visual yang konsisten.
+   - Atur Engine Settings (Model, Ratio, Quality) sesuai kebutuhan microstock.
+
+4. EKSEKUSI & MONITORING
+   - Klik [Execute Flow] untuk memulai.
+   - JANGAN TUTUP tab Google Flow selama robot bekerja.
+   - Pantau Task Queue untuk melihat status tiap prompt.
+
+5. KEAMANAN (ANTI-BAN)
+   - Robot ini sudah dilengkapi jeda 15 detik otomatis antar prompt.
+   - Jangan mencoba mempercepat jeda ini secara paksa agar akun 
+     Google lu tidak terkena limit atau flagging.
+
+6. DOA & WORKFLOW
+   - Ingat doa sebelum narik antrean panjang.
+   - Pastikan koneksi internet stabil agar proses render 2K/4K tidak gagal.
+============================================================

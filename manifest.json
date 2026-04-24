@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "BRKH auto flow",
+  "version": "5.0.0",
+  "description": "Direct Injection Engine",
+  "icons": {
+    "128": "icon.png"
+  },
+  "permissions": [
+    "sidePanel",
+    "storage",
+    "tabs",
+    "scripting",
+    "activeTab",
+    "declarativeNetRequest"
+  ],
+  "host_permissions": [
+    "*://labs.google/*"
+  ],
+  "background": {
+    "service_worker": "bg.js"
+  },
+  "action": {
+    "default_title": "Open BRKH auto flow"
+  },
+  "side_panel": {
+    "default_path": "panel.html"
+  },
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "ruleset_1",
+        "enabled": true,
+        "path": "rules.json"
+      }
+    ]
+  }
+}

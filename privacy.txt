@@ -1,0 +1,26 @@
+============================================================
+                PRIVACY POLICY - BRKH STUDIO
+============================================================
+
+BRKH auto flow sangat menghargai privasi data desain dan strategi studio.
+
+1. PENYIMPANAN DATA: 
+   Software ini TIDAK menyimpan prompt, hasil generate, atau data login 
+   Google lu di server manapun. Semua data diproses secara lokal 
+   (Local Processing) di dalam browser lu sendiri.
+
+2. TRANSMISI DATA:
+   Satu-satunya transmisi data yang terjadi adalah pengiriman teks prompt 
+   dari extension ke tab Google Labs Flow yang sedang aktif. Tidak ada 
+   pihak ketiga (Third Party) yang terlibat selain Google.
+
+3. LOG AKTIVITAS:
+   Log aktivitas Task Queue hanya tersimpan sementara selama extension dibuka. 
+   Begitu extension ditutup atau direfresh, data queue akan terhapus demi keamanan.
+
+4. KEAMANAN ASET:
+   Hasil render gambar langsung masuk ke folder download lokal komputer lu. 
+   Kami tidak mengintip atau menduplikasi hasil karya lu.
+
+Update Terakhir: 13 April 2026.
+============================================================
