@@ -1,192 +1,128 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
   <meta charset="UTF-8">
   <title>BRKH auto flow</title>
   <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
   <div id="welcome-modal" class="modal-overlay" style="display: flex;">
     <div class="modal-content glass-card">
-      <div class="brand-large">BRKH <span>auto flow</span></div>
+      <div class="brand-large">BRKH <span>hybrid</span></div>
       <div class="modal-scroll-area">
         <section class="info-section">
-          <h4>⚠️ PROSEDUR WAJIB</h4>
-          <p>1. Tekan tombol <strong>Buka Flow Workspace</strong>.</p>
-          <p>2. <strong>Wajib:</strong> Buat Project baru secara manual di Google Flow sebelum menekan Execute.</p>
-          <p>3. Jangan menutup tab Flow selama proses berjalan otomatis.</p>
-        </section>
-        <section class="info-section">
-          <h4>📖 USER GUIDELINE</h4>
-          <ul>
-            <li>Jeda 15 detik otomatis aktif untuk keamanan akun (Anti-Ban).</li>
-            <li>Pills Style Modifiers akan otomatis digabung ke prompt utama.</li>
-            <li><strong>Ingat Doa:</strong> Biar hasil generate gacor parah!</li>
-          </ul>
-        </section>
-        <section class="legal-grid">
-          <div class="legal-item">
-            <h5>Privacy Policy</h5>
-            <p>Data prompt lokal. Tidak ada data yang dikirim ke server luar.</p>
-          </div>
-          <div class="legal-item">
-            <h5>License & Copyright</h5>
-            <p>Internal BRKH Studio &copy; 2026. Developed by <strong>BAYUNITY</strong>.</p>
-          </div>
+            <h4>⚠️ PROSEDUR HYBRID (WAJIB)</h4>
+            <p>1. Buka <strong>Google Flow Workspace</strong>.</p>
+            <p>2. <strong>PENTING:</strong> Atur Aspect Ratio, Model AI, dan Jumlah Output secara <strong>MANUAL</strong> di web Flow sebelum menekan Execute.</p>
+            <p>3. Robot hanya akan fokus memproses prompt dan mendownload hasil.</p>
         </section>
       </div>
-      <button id="close-modal-btn" class="btn-main btn-start">SAYA MENGERTI & LANJUT</button>
+      <button id="close-modal-btn" class="btn-main btn-start">SAYA MENGERTI</button>
     </div>
   </div>
 
   <div class="container">
     <div class="header">
-      <div class="brand">BRKH <span>auto flow</span></div>
+        <div class="brand">BRKH <span>hybrid mode</span></div>
     </div>
     <button class="btn-flow" id="btn-open-flow">Buka Flow Workspace</button>
 
     <div class="glass-card" style="padding: 0; overflow: hidden;">
       <div style="padding: 16px; background: rgba(255, 255, 255, 0.02); border-bottom: 1px solid var(--border-glass);">
         <div class="section-header" style="margin-bottom: 12px;">
-          <div class="icon-box"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-            </svg></div>
+          <div class="icon-box">📌</div>
           <div class="header-text" style="flex-grow: 1;">
             <h3>Task Queue</h3>
             <p id="q-count" style="color: var(--accent-blue);">0/0 completed</p>
           </div>
-          <button id="btn-clear-queue"
-            style="padding: 6px 12px; font-size: 11px; font-weight: bold; border-radius: 6px; cursor: pointer; border: 1px solid rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.1); color: var(--accent-red);">Clear</button>
+          <button id="btn-clear-queue" class="btn-clear" style="border-color: var(--accent-red); color: var(--accent-red);">Clear</button>
         </div>
-        <div
-          style="width: 100%; height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden;">
-          <div id="main-progress"
-            style="height: 100%; width: 0%; background: linear-gradient(90deg, #38bdf8, #8b5cf6); transition: width 0.4s ease;">
-          </div>
+        <div style="width: 100%; height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden;">
+          <div id="main-progress" style="height: 100%; width: 0%; background: linear-gradient(90deg, #38bdf8, #8b5cf6); transition: width 0.4s ease;"></div>
         </div>
       </div>
-      <div id="queue-list" style="max-height: 220px; overflow-y: auto; padding: 12px;"></div>
+      <div id="queue-list" style="max-height: 150px; overflow-y: auto; padding: 12px;"></div>
     </div>
 
     <div class="glass-card">
-      <div class="section-header">
-        <div class="icon-box"
-          style="background: rgba(16, 185, 129, 0.1); color: var(--accent-green); border-color: rgba(16, 185, 129, 0.2);">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-            <circle cx="8.5" cy="8.5" r="1.5"></circle>
-            <polyline points="21 15 16 10 5 21"></polyline>
-          </svg>
+        <div class="section-header">
+            <div class="icon-box" style="color: var(--accent-green);">📝</div>
+            <div class="header-text"><h3>Prompt Input</h3></div>
         </div>
-        <div class="header-text">
-          <h3>Prompt Input</h3>
-          <p>Upload .txt atau ketik prompt</p>
+        <div class="upload-box" id="drop-zone" style="margin-bottom: 10px;">
+            <span id="drop-text" style="font-weight: 600;">Klik / Drag .txt File</span>
         </div>
-      </div>
-      <div class="upload-box" id="drop-zone" style="margin-bottom: 10px;">
-        <span id="drop-text" style="font-weight: 600;">Klik / Drag .txt File</span>
-      </div>
-      <input type="file" id="file-input" accept=".txt" style="display:none">
-      <textarea id="text-input" rows="3" placeholder="Atau paste prompt di sini..."></textarea>
+        <input type="file" id="file-input" accept=".txt" style="display:none">
+        <textarea id="text-input" rows="2" class="prompt-input" placeholder="Atau paste prompt di sini..."></textarea>
     </div>
 
-    <div class="glass-card" style="border-color: rgba(34, 211, 238, 0.3);">
-      <div class="section-header" style="margin-bottom: 12px;">
-        <div class="icon-box"
-          style="background: rgba(34, 211, 238, 0.1); color: var(--neon); border-color: rgba(34, 211, 238, 0.2);"><svg
-            width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"></path>
-            <line x1="16" y1="8" x2="2" y2="22"></line>
-            <line x1="17.5" y1="15" x2="9" y2="15"></line>
-          </svg></div>
-        <div class="header-text">
-          <h3 style="color: var(--neon); letter-spacing: 0.5px;">QUICK STYLE MODIFIERS</h3>
-          <p>Otomatis jahit ke prompt</p>
+    <div class="glass-card neon-card">
+        <div class="section-header">
+            <div class="icon-box-neon">✨</div>
+            <div class="header-text"><h3 class="neon-text">ART DIRECTION</h3><p>Injector visual & style</p></div>
         </div>
-      </div>
-      <div
-        style="background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(34, 211, 238, 0.15); border-radius: 12px; padding: 15px;">
+        
+        <div class="dropdown-row" style="margin-bottom: 12px;">
+            <span class="dropdown-label">Visual Style</span>
+            <select id="set-visual-style" class="glass-select" style="width: 160px;">
+                <option value="">-- Murni dari Prompt --</option>
+                <option value="Masterpiece, ultra detailed, 8k resolution, best quality">🏆 Best Quality / 8K</option>
+                <option value="Cinematic lighting, dramatic shadows, highly detailed, photorealistic">🎬 Cinematic / Realistic</option>
+                <option value="Studio lighting, clean background, sharp focus, professional photography">📸 Studio Photography</option>
+                <option value="Vibrant colors, highly saturated, energetic atmosphere">🌈 Vibrant / Pop</option>
+                <option value="Dark fantasy, moody, atmospheric, low key lighting">🌑 Dark / Moody</option>
+            </select>
+        </div>
+
         <div class="style-pills-container" id="style-pills">
-          <button class="style-pill" data-style="flat illustration">FLAT ILLUS</button>
-          <button class="style-pill" data-style="logo design, minimalist, vector">LOGO</button>
-          <button class="style-pill" data-style="mascot character design, isolated">MASCOT</button>
-          <button class="style-pill" data-style="sticker design, die-cut, white border">STICKER</button>
-          <button class="style-pill" data-style="comic book art style">KOMIK</button>
-          <button class="style-pill" data-style="3D animation style, octane render, unreal engine">ANIMASI 3D</button>
-          <button class="style-pill" data-style="manga style, anime art">MANGA</button>
-          <button class="style-pill" data-style="pencil sketch, hand drawn">SKETCH</button>
-          <button class="style-pill" data-style="cyberpunk style, neon aesthetic">CYBERPUNK</button>
-          <button class="style-pill" data-style="solid white background">WHITE BG</button>
+            <button class="style-pill" data-style="manga style, anime art, cel shaded">MANGA</button>
+            <button class="style-pill" data-style="comic book art, halftone, bold lines">KOMIK</button>
+            <button class="style-pill" data-style="pop art style, retro, colorful">POP ART</button>
+            <button class="style-pill" data-style="mascot character design, isolated">MASCOT</button>
+            <button class="style-pill" data-style="flat vector illustration, clean lines">FLAT ILLUS</button>
+            <button class="style-pill" data-style="modern icon design, minimalist">ICON</button>
+            <button class="style-pill" data-style="isometric 3d, detailed diorama">ISOMETRIC</button>
+            <button class="style-pill" data-style="3D model, octane render, unreal engine 5">3D MODEL</button>
+            <button class="style-pill" data-style="lottie animation style, clean 2d vector">LOTTIE</button>
+            <button class="style-pill" data-style="photorealistic, 85mm lens, raw photo">REALISTIC</button>
+            <button class="style-pill" data-style="watercolor painting, loose brush strokes">WATERCOLOR</button>
+            <button class="style-pill" data-style="sticker design, die-cut, white border">STICKER</button>
         </div>
-        <hr style="border: 0; border-top: 1px dashed rgba(34, 211, 238, 0.2); margin: 0 0 15px 0;">
-        <input type="text" id="manual-style-input" class="manual-style-input"
-          placeholder="+ Tambah style manual di sini...">
-      </div>
+        <input type="text" id="manual-style-input" class="manual-style-input" style="margin-top: 10px;" placeholder="+ Tambah style manual di sini...">
     </div>
 
     <div class="glass-card">
-      <div class="section-header">
-        <div class="icon-box"
-          style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; border-color: rgba(245, 158, 11, 0.2);"><svg
-            width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="3"></circle>
-            <path
-              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
-            </path>
-          </svg></div>
-        <div class="header-text">
-          <h3>Engine Settings</h3>
-          <p>Konfigurasi model & flow</p>
+        <div class="section-header">
+            <div class="icon-box" style="color: #f59e0b;">⚙️</div>
+            <div class="header-text"><h3>Robot Settings</h3><p>Konfigurasi Auto-Download</p></div>
         </div>
-      </div>
-      <div class="setting-row"><span>Auto-Download</span><label class="switch"><input type="checkbox" id="set-dl"
-            checked><span class="slider"></span></label></div>
-      <div class="setting-row"><span>Stealth Mode</span><label class="switch"><input type="checkbox" id="set-stealth"
-            checked><span class="slider"></span></label></div>
-      <p style="font-size: 10px; color: var(--text-muted); margin-bottom: 5px;">Delay Random (0s - 60s)</p>
-      <input type="range" id="delay-val" min="0" max="60" value="0" style="margin-bottom: 15px;">
-      <div class="dropdown-row">
-        <div class="dropdown-label">Image Model</div><select id="set-model" class="glass-select">
-          <option value="imagen4">Imagen 4</option>
-          <option value="nano2">Nano Banana 2</option>
-        </select>
-      </div>
-      <div class="dropdown-row">
-        <div class="dropdown-label">Aspect Ratio</div><select id="set-ratio" class="glass-select">
-          <option value="16:9">Landscape (16:9)</option>
-          <option value="1:1">Square (1:1)</option>
-          <option value="9:16">Portrait (9:16)</option>
-        </select>
-      </div>
-      <div class="dropdown-row">
-        <div class="dropdown-label">Resolution</div><select id="set-quality" class="glass-select">
-          <option value="1k">1K Original</option>
-          <option value="2k" selected>2K Upscale</option>
-          <option value="4k">4K Upscale</option>
-        </select>
-      </div>
-    </div>
-
-    <div style="text-align:center; padding: 10px 10px 20px; font-size: 10px; color:#64748b; line-height: 1.6;">
-      <a href="https://wa.me/6283862300495" target="_blank"
-        style="color: var(--accent-blue); text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 6px; justify-content: center; padding: 8px 12px; background: rgba(59, 130, 246, 0.1); border-radius: 6px;">Report
-        Issue</a>
-      <div style="margin-top: 15px; opacity: 0.8;">Dikembangkan oleh <strong
-          style="color: #f1f5f9;">BAYUNITY</strong><br>Tools Internal BRKH Studio &copy; 2026</div>
+        <div class="setting-row"><span>Auto-Download</span><label class="switch"><input type="checkbox" id="set-dl" checked><span class="slider"></span></label></div>
+        <div class="setting-row"><span>Stealth Delay</span><label class="switch"><input type="checkbox" id="set-stealth" checked><span class="slider"></span></label></div>
+        
+        <div class="dropdown-row">
+            <div class="dropdown-label">Target Download / Prompt</div>
+            <select id="set-expected-output" class="glass-select">
+                <option value="1">1 Gambar</option>
+                <option value="2">2 Gambar</option>
+                <option value="3">3 Gambar</option>
+                <option value="4" selected>4 Gambar</option>
+            </select>
+        </div>
+        <div class="dropdown-row">
+            <div class="dropdown-label">Download Quality</div>
+            <select id="set-quality" class="glass-select">
+                <option value="1k">1K Original</option>
+                <option value="2k" selected>2K Upscale</option>
+                <option value="4k">4K Upscale</option>
+            </select>
+        </div>
     </div>
   </div>
 
   <div class="footer-btns">
-    <button class="btn-main btn-start" id="start-btn">Execute Flow</button>
+    <button class="btn-main btn-start" id="start-btn">Hajar Prompt</button>
     <button class="btn-main btn-stop" id="stop-btn">Stop</button>
   </div>
-  <script src="welcome.js"></script>
   <script src="panel.js"></script>
 </body>
-
 </html>
