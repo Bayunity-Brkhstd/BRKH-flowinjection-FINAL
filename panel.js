@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             queue[i].status = 'RUN'; renderQueue();
 
-            // GABUNGKAN PROMPT
+            // PENGGABUNGAN PROMPT HYBRID
             const visualStyle = document.getElementById('set-visual-style')?.value || "";
             const activeStyles = Array.from(document.querySelectorAll('.style-pill.active')).map(p => p.dataset.style);
             const manualStyle = document.getElementById('manual-style-input')?.value.trim();
@@ -149,12 +149,28 @@ document.addEventListener('DOMContentLoaded', () => {
                  await new Promise(r => setTimeout(r, 2000));
             }
         }
+        
+        // =====================================================================
+        // 🔥 FITUR BARU: PLAY SFX SAAT SEMUA TUGAS SELESAI 🔥
+        // =====================================================================
+        const isQueueFinished = queue.length > 0 && !queue.some(t => t.status === 'WAIT' || t.status === 'RUN');
+        
+        // Mastiin dia bunyi cuma kalau selesai normal (bukan karena dipencet STOP)
+        if (isQueueFinished && isRunning) {
+            try {
+                const sfx = new Audio('fah.mp3');
+                sfx.play();
+            } catch (err) {
+                console.log("SFX Gagal diputar:", err);
+            }
+        }
+        
         isRunning = false;
     }
 });
 
 // ==============================================================================
-// 🚀 INJECTOR ENGINE (BACK TO ROOTS - THE ORIGINAL WORKING SCRIPT)
+// 🚀 DEEP CORE SCANNER INJECTOR (THE FINAL BOSS BYPASS)
 // ==============================================================================
 async function injectAutomationTurbo(s) {
     const sleep = (ms) => new Promise(r => setTimeout(r, ms));
@@ -174,73 +190,83 @@ async function injectAutomationTurbo(s) {
 
     try {
         // =====================================================================
-        // 1. INJECT PROMPT (PAKAI JALUR LAMA YANG SUKSES)
+        // 1. DEEP SCANNER: MENCARI ENGINE ASLI GOOGLE (SLATE.JS)
         // =====================================================================
-        showOverlay("✍️ Injecting Prompt...");
+        showOverlay("✍️ Melakukan Deep Scan pada Editor...");
+        let slateEditorObj = null;
         
-        const editor = document.querySelector('[data-slate-editor="true"]');
-        if (!editor) throw new Error("Area Prompt (Editor) tidak ditemukan.");
-        
-        // Cari React Fiber Key
-        const fiberKey = Object.keys(editor).find(k => k.startsWith('__reactFiber'));
-        if (!fiberKey) throw new Error("Gagal bypass React (Fiber key hilang).");
-
-        // Eksekusi Hapus & Tulis Murni
-        let slate = editor[fiberKey];
-        let injected = false;
-        while(slate) {
-            if (slate.memoizedProps?.editor?.children) {
-                const sl = slate.memoizedProps.editor;
-                const txt = sl.children[0]?.children[0]?.text || '';
-                if (txt.length > 0) sl.apply({ type: 'remove_text', path: [0,0], offset: 0, text: txt });
-                
-                sl.apply({ type: 'insert_text', path: [0,0], offset: 0, text: s.prompt }); 
-                injected = true;
-                break;
+        const allNodes = document.querySelectorAll('*');
+        for (let el of allNodes) {
+            const fKey = Object.keys(el).find(k => k.startsWith('__reactFiber'));
+            if (fKey) {
+                let node = el[fKey];
+                while (node) {
+                    if (node.memoizedProps && node.memoizedProps.editor && typeof node.memoizedProps.editor.insertText === 'function') {
+                        slateEditorObj = node.memoizedProps.editor;
+                        break;
+                    }
+                    node = node.return;
+                }
             }
-            slate = slate.return;
+            if (slateEditorObj) break;
         }
 
-        if (!injected) throw new Error("Gagal menyuntikkan prompt ke dalam Slate.");
-        await sleep(500);
-
-        // Pancing sedikit biar tombol generate aktif (Simulasi manusia nekan spasi lalu hapus)
-        editor.focus();
-        document.execCommand('insertText', false, ' ');
-        document.execCommand('delete', false, null);
-        await sleep(500);
+        if (slateEditorObj) {
+            showOverlay("✅ Engine ditemukan! Menyuntikkan prompt VIP...");
+            if (typeof slateEditorObj.deleteBackward === 'function') {
+                for(let i=0; i<50; i++) slateEditorObj.deleteBackward('character');
+            }
+            slateEditorObj.insertText(s.prompt);
+            await sleep(500);
+        } else {
+            showOverlay("⚠️ Engine ngumpet, pakai metode Brutal DOM...");
+            const box = document.querySelector('[contenteditable="true"]');
+            if(!box) throw new Error("Area Prompt mati total, tidak bisa diinjeksi!");
+            box.focus();
+            document.execCommand('selectAll', false, null);
+            document.execCommand('insertText', false, s.prompt);
+            box.dispatchEvent(new Event('input', {bubbles: true}));
+            await sleep(500);
+        }
 
         const initialSrcs = getMediaElements().map(m => m.src);
 
         // =====================================================================
-        // 2. TEKAN TOMBOL GENERATE
+        // 2. MENCARI & KLIK TOMBOL GENERATE
         // =====================================================================
-        showOverlay("🚀 Eksekusi Generate...");
+        showOverlay("🚀 Mencari Tombol Generate...");
+        let btn = null;
+        let btnAttempts = 0;
         
-        let btn = Array.from(document.querySelectorAll('button')).find(b => {
-             const i = b.querySelector('i');
-             return i && i.textContent.trim() === 'arrow_forward' && !b.disabled;
-        });
-        
-        if (!btn) {
-             // Fallback kalau nggak nemu arrow_forward
-             btn = Array.from(document.querySelectorAll('button')).find(b => {
-                 const text = b.textContent.toLowerCase();
+        while(!btn && btnAttempts < 6) {
+             const allBtns = Array.from(document.querySelectorAll('button, div[role="button"]'));
+             btn = allBtns.find(b => {
+                 const text = b.textContent.trim().toLowerCase();
                  const aria = (b.getAttribute('aria-label') || '').toLowerCase();
-                 return (text.includes('generate') || text.includes('buat') || aria.includes('generate')) && !b.disabled;
+                 const isGen = text.includes('arrow_forward') || text.includes('send') || text.includes('generate') || text.includes('buat') || aria.includes('generate') || aria.includes('submit');
+                 const isDisabled = b.disabled || b.getAttribute('aria-disabled') === 'true';
+                 return isGen && !isDisabled;
              });
+             
+             if(btn) break;
+             await sleep(500);
+             btnAttempts++;
         }
 
         if (btn) {
             btn.click();
         } else {
-             // Kalau masih ngumpet, pencet enter di editornya
-             showOverlay("⚠️ Maksa pakai tombol ENTER...");
-             editor.focus();
-             editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true }));
+             showOverlay("⚠️ Tombol Generate dikunci! Maksa pakai tombol ENTER...");
+             const box = document.querySelector('[contenteditable="true"]') || document.body;
+             box.focus();
+             box.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true }));
+             await sleep(1500);
+             
+             const afterEnterSrcs = getMediaElements().map(m => m.src);
+             if (initialSrcs.length === afterEnterSrcs.length && !document.querySelector('[data-tile-id]')) {
+                 throw new Error("Ditolak Google: Tombol Generate mati & Enter diblokir.");
+             }
         }
-
-        await sleep(1500); // Tunggu sistem Google merespon
 
         // =====================================================================
         // 3. TUNGGU RENDER & DOWNLOAD
@@ -289,7 +315,7 @@ async function injectAutomationTurbo(s) {
                 }
             }
             if (downloadedCount === 0) {
-                throw new Error("Timeout! Gambar baru tidak muncul setelah 2.5 menit.");
+                throw new Error("Gambar baru tidak muncul (Timeout 2.5 menit).");
             }
         }
 
