@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             queue[i].status = 'RUN'; renderQueue();
 
-            // PENGGABUNGAN PROMPT (Visual Style + Prompt Utama + Pills + Manual Style)
+            // GABUNGKAN PROMPT
             const visualStyle = document.getElementById('set-visual-style')?.value || "";
             const activeStyles = Array.from(document.querySelectorAll('.style-pill.active')).map(p => p.dataset.style);
             const manualStyle = document.getElementById('manual-style-input')?.value.trim();
@@ -154,7 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==============================================================================
-// 🚀 INJECTOR HYBRID (PURE INJECT & DOWNLOAD - NO UI SETTINGS MANIPULATION)
+// 🚀 INJECTOR ENGINE (BACK TO ROOTS - THE ORIGINAL WORKING SCRIPT)
 // ==============================================================================
 async function injectAutomationTurbo(s) {
     const sleep = (ms) => new Promise(r => setTimeout(r, ms));
@@ -164,52 +164,49 @@ async function injectAutomationTurbo(s) {
         if (!o) {
             o = document.createElement('div'); o.id = 'brkh-overlay';
             o.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);backdrop-filter:blur(10px);z-index:9999999;display:flex;align-items:center;justify-content:center;color:white;font-family:sans-serif;text-align:center;";
-            o.innerHTML = `<div style="background:#0f172a;border:1px solid #38bdf8;padding:30px;border-radius:24px;box-shadow:0 0 30px rgba(56,189,248,0.2);"><h2 style="color:#38bdf8;margin:0 0 10px;text-transform:uppercase;">BRKH Hybrid Engine</h2><p id="brkh-msg"></p></div>`;
+            o.innerHTML = `<div style="background:#0f172a;border:1px solid #38bdf8;padding:30px;border-radius:24px;box-shadow:0 0 30px rgba(56,189,248,0.2);"><h2 style="color:#38bdf8;margin:0 0 10px;text-transform:uppercase;">BRKH Hybrid Engine</h2><p id="brkh-msg" style="font-weight:bold;"></p></div>`;
             document.body.appendChild(o);
         }
         document.getElementById('brkh-msg').textContent = msg;
-    }
-
-    async function waitForElement(selector, timeout = 3000) {
-        let elapsed = 0;
-        while(elapsed < timeout) {
-            const el = document.querySelector(selector);
-            if (el) return el;
-            await sleep(200);
-            elapsed += 200;
-        }
-        return null;
     }
 
     const getMediaElements = () => Array.from(document.querySelectorAll('img, video')).filter(el => el.src && !el.src.includes('avatar') && !el.src.includes('icon') && !el.src.includes('logo') && !el.src.startsWith('data:image/svg'));
 
     try {
         // =====================================================================
-        // 1. INJECT PROMPT KE EDITOR
+        // 1. INJECT PROMPT (PAKAI JALUR LAMA YANG SUKSES)
         // =====================================================================
-        showOverlay("✍️ Menyiapkan Prompt...");
-        const editor = await waitForElement('[data-slate-editor="true"]', 3000);
-        if (!editor) throw new Error("Area teks prompt tidak ditemukan!");
-
-        // React Fiber Method
+        showOverlay("✍️ Injecting Prompt...");
+        
+        const editor = document.querySelector('[data-slate-editor="true"]');
+        if (!editor) throw new Error("Area Prompt (Editor) tidak ditemukan.");
+        
+        // Cari React Fiber Key
         const fiberKey = Object.keys(editor).find(k => k.startsWith('__reactFiber'));
-        if (fiberKey) {
-            let slate = editor[fiberKey];
-            while(slate) {
-                if (slate.memoizedProps?.editor?.children) {
-                    const sl = slate.memoizedProps.editor;
-                    const txt = sl.children[0]?.children[0]?.text || '';
-                    if (txt.length > 0) sl.apply({ type: 'remove_text', path: [0,0], offset: 0, text: txt });
-                    sl.apply({ type: 'insert_text', path: [0,0], offset: 0, text: s.prompt }); 
-                    break;
-                }
-                slate = slate.return;
+        if (!fiberKey) throw new Error("Gagal bypass React (Fiber key hilang).");
+
+        // Eksekusi Hapus & Tulis Murni
+        let slate = editor[fiberKey];
+        let injected = false;
+        while(slate) {
+            if (slate.memoizedProps?.editor?.children) {
+                const sl = slate.memoizedProps.editor;
+                const txt = sl.children[0]?.children[0]?.text || '';
+                if (txt.length > 0) sl.apply({ type: 'remove_text', path: [0,0], offset: 0, text: txt });
+                
+                sl.apply({ type: 'insert_text', path: [0,0], offset: 0, text: s.prompt }); 
+                injected = true;
+                break;
             }
+            slate = slate.return;
         }
 
-        // Pancing Native Event biar tombol Generate nyala
+        if (!injected) throw new Error("Gagal menyuntikkan prompt ke dalam Slate.");
+        await sleep(500);
+
+        // Pancing sedikit biar tombol generate aktif (Simulasi manusia nekan spasi lalu hapus)
         editor.focus();
-        document.execCommand('insertText', false, ' '); 
+        document.execCommand('insertText', false, ' ');
         document.execCommand('delete', false, null);
         await sleep(500);
 
@@ -218,37 +215,35 @@ async function injectAutomationTurbo(s) {
         // =====================================================================
         // 2. TEKAN TOMBOL GENERATE
         // =====================================================================
-        showOverlay("🚀 Eksekusi Render...");
-        let btn = null;
-        let btnAttempts = 0;
+        showOverlay("🚀 Eksekusi Generate...");
         
-        while(!btn && btnAttempts < 4) {
-             const allBtns = Array.from(document.querySelectorAll('button'));
-             btn = allBtns.find(b => {
-                 const text = b.textContent.trim().toLowerCase();
+        let btn = Array.from(document.querySelectorAll('button')).find(b => {
+             const i = b.querySelector('i');
+             return i && i.textContent.trim() === 'arrow_forward' && !b.disabled;
+        });
+        
+        if (!btn) {
+             // Fallback kalau nggak nemu arrow_forward
+             btn = Array.from(document.querySelectorAll('button')).find(b => {
+                 const text = b.textContent.toLowerCase();
                  const aria = (b.getAttribute('aria-label') || '').toLowerCase();
-                 const isGenerateBtn = text.includes('arrow_forward') || text.includes('send') || text.includes('generate') || text.includes('buat') || aria.includes('generate') || aria.includes('submit');
-                 if (isGenerateBtn && !b.disabled && b.getAttribute('aria-disabled') !== 'true') return true;
-                 return false;
+                 return (text.includes('generate') || text.includes('buat') || aria.includes('generate')) && !b.disabled;
              });
-             if(!btn) { await sleep(500); btnAttempts++; }
         }
 
         if (btn) {
             btn.click();
         } else {
-             // Fallback: Tekan Enter
+             // Kalau masih ngumpet, pencet enter di editornya
+             showOverlay("⚠️ Maksa pakai tombol ENTER...");
              editor.focus();
              editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true }));
-             await sleep(1000);
-             const afterEnterSrcs = getMediaElements().map(m => m.src);
-             if (initialSrcs.length === afterEnterSrcs.length && !document.querySelector('[data-tile-id]')) {
-                 throw new Error("Gagal Submit! Tombol Generate tidak merespon.");
-             }
         }
 
+        await sleep(1500); // Tunggu sistem Google merespon
+
         // =====================================================================
-        // 3. TUNGGU RENDER DAN DOWNLOAD GAMBAR BARU
+        // 3. TUNGGU RENDER & DOWNLOAD
         // =====================================================================
         if (s.dl) {
             const targetDownloads = parseInt(s.expectedOutputs, 10) || 1; 
@@ -294,7 +289,7 @@ async function injectAutomationTurbo(s) {
                 }
             }
             if (downloadedCount === 0) {
-                throw new Error("Timeout! Gambar baru tidak muncul dalam 2.5 menit.");
+                throw new Error("Timeout! Gambar baru tidak muncul setelah 2.5 menit.");
             }
         }
 
