@@ -12,10 +12,13 @@
     "tabs",
     "scripting",
     "activeTab",
-    "declarativeNetRequest"
+    "declarativeNetRequest",
+    "webRequest",
+    "downloads"
   ],
   "host_permissions": [
-    "*://labs.google/*"
+    "*://labs.google/*",
+    "*://*.googleapis.com/*"
   ],
   "background": {
     "service_worker": "bg.js"
@@ -26,6 +29,17 @@
   "side_panel": {
     "default_path": "panel.html"
   },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://labs.google/*"
+      ],
+      "js": [
+        "spy.js"
+      ],
+      "run_at": "document_start"
+    }
+  ],
   "declarative_net_request": {
     "rule_resources": [
       {

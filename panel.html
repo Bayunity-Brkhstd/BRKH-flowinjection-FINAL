@@ -1,128 +1,154 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
   <meta charset="UTF-8">
-  <title>BRKH auto flow</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BRKH TurboFlow</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
-  <div id="welcome-modal" class="modal-overlay" style="display: flex;">
-    <div class="modal-content glass-card">
-      <div class="brand-large">BRKH <span>hybrid</span></div>
-      <div class="modal-scroll-area">
-        <section class="info-section">
-            <h4>⚠️ PROSEDUR HYBRID (WAJIB)</h4>
-            <p>1. Buka <strong>Google Flow Workspace</strong>.</p>
-            <p>2. <strong>PENTING:</strong> Atur Aspect Ratio, Model AI, dan Jumlah Output secara <strong>MANUAL</strong> di web Flow sebelum menekan Execute.</p>
-            <p>3. Robot hanya akan fokus memproses prompt dan mendownload hasil.</p>
-        </section>
-      </div>
-      <button id="close-modal-btn" class="btn-main btn-start">SAYA MENGERTI</button>
-    </div>
+  <!-- FASE 6: Status Banner -->
+  <div id="workflow-banner"
+    style="background: #1e293b; border-bottom: 1px solid #334155; padding: 6px 15px; font-size: 10px; display: flex; justify-content: space-between; align-items: center; color: #94a3b8;">
+    <div>Status: <span id="wf-status" style="color: #f59e0b;">Waiting for Identity...</span></div>
+    <div id="heartbeat-indicator" title="Heartbeat Anti-Idle">💓</div>
   </div>
 
   <div class="container">
+    <!-- HEADER -->
     <div class="header">
-        <div class="brand">BRKH <span>hybrid mode</span></div>
-    </div>
-    <button class="btn-flow" id="btn-open-flow">Buka Flow Workspace</button>
-
-    <div class="glass-card" style="padding: 0; overflow: hidden;">
-      <div style="padding: 16px; background: rgba(255, 255, 255, 0.02); border-bottom: 1px solid var(--border-glass);">
-        <div class="section-header" style="margin-bottom: 12px;">
-          <div class="icon-box">📌</div>
-          <div class="header-text" style="flex-grow: 1;">
-            <h3>Task Queue</h3>
-            <p id="q-count" style="color: var(--accent-blue);">0/0 completed</p>
-          </div>
-          <button id="btn-clear-queue" class="btn-clear" style="border-color: var(--accent-red); color: var(--accent-red);">Clear</button>
-        </div>
-        <div style="width: 100%; height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden;">
-          <div id="main-progress" style="height: 100%; width: 0%; background: linear-gradient(90deg, #38bdf8, #8b5cf6); transition: width 0.4s ease;"></div>
+      <div class="logo-section">
+        <div class="logo-icon">🚀</div>
+        <div class="logo-text">
+          <h1>TurboFlow</h1>
+          <p>BRKH Automation Engine</p>
         </div>
       </div>
-      <div id="queue-list" style="max-height: 150px; overflow-y: auto; padding: 12px;"></div>
+      <div class="status-badge" id="conn-status" style="cursor: pointer;" title="Klik untuk buka Google Flow">
+        <span class="status-dot" id="status-dot" style="background: #ef4444; box-shadow: 0 0 8px #ef4444;"></span>
+        <span id="status-text" style="color: #94a3b8;">Disconnected</span>
+      </div>
     </div>
 
-    <div class="glass-card">
-        <div class="section-header">
-            <div class="icon-box" style="color: var(--accent-green);">📝</div>
-            <div class="header-text"><h3>Prompt Input</h3></div>
-        </div>
-        <div class="upload-box" id="drop-zone" style="margin-bottom: 10px;">
-            <span id="drop-text" style="font-weight: 600;">Klik / Drag .txt File</span>
-        </div>
-        <input type="file" id="file-input" accept=".txt" style="display:none">
-        <textarea id="text-input" rows="2" class="prompt-input" placeholder="Atau paste prompt di sini..."></textarea>
+    <!-- TABS NAVIGATION -->
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="tab-input">Input</button>
+      <button class="tab-btn" data-tab="tab-queue">Antrean</button>
+      <button class="tab-btn" data-tab="tab-settings">Setting</button>
     </div>
 
-    <div class="glass-card neon-card">
+    <!-- TAB: INPUT -->
+    <div id="tab-input" class="tab-content">
+      <div class="glass-card">
         <div class="section-header">
-            <div class="icon-box-neon">✨</div>
-            <div class="header-text"><h3 class="neon-text">ART DIRECTION</h3><p>Injector visual & style</p></div>
+          <div class="icon-box">✍️</div>
+          <div class="header-text">
+            <h3>Prompt Generator</h3>
+            <p>Masukkan satu atau banyak prompt</p>
+          </div>
+          <div id="token-check" style="font-size: 14px; filter: grayscale(100%);" title="Token Status">🔑</div>
         </div>
-        
-        <div class="dropdown-row" style="margin-bottom: 12px;">
-            <span class="dropdown-label">Visual Style</span>
-            <select id="set-visual-style" class="glass-select" style="width: 160px;">
-                <option value="">-- Murni dari Prompt --</option>
-                <option value="Masterpiece, ultra detailed, 8k resolution, best quality">🏆 Best Quality / 8K</option>
-                <option value="Cinematic lighting, dramatic shadows, highly detailed, photorealistic">🎬 Cinematic / Realistic</option>
-                <option value="Studio lighting, clean background, sharp focus, professional photography">📸 Studio Photography</option>
-                <option value="Vibrant colors, highly saturated, energetic atmosphere">🌈 Vibrant / Pop</option>
-                <option value="Dark fantasy, moody, atmospheric, low key lighting">🌑 Dark / Moody</option>
-            </select>
-        </div>
+        <textarea id="text-input"
+          placeholder="Contoh:&#10;Kucing lucu di bulan&#10;Robot masak nasi goreng..."></textarea>
+      </div>
 
-        <div class="style-pills-container" id="style-pills">
-            <button class="style-pill" data-style="manga style, anime art, cel shaded">MANGA</button>
-            <button class="style-pill" data-style="comic book art, halftone, bold lines">KOMIK</button>
-            <button class="style-pill" data-style="pop art style, retro, colorful">POP ART</button>
-            <button class="style-pill" data-style="mascot character design, isolated">MASCOT</button>
-            <button class="style-pill" data-style="flat vector illustration, clean lines">FLAT ILLUS</button>
-            <button class="style-pill" data-style="modern icon design, minimalist">ICON</button>
-            <button class="style-pill" data-style="isometric 3d, detailed diorama">ISOMETRIC</button>
-            <button class="style-pill" data-style="3D model, octane render, unreal engine 5">3D MODEL</button>
-            <button class="style-pill" data-style="lottie animation style, clean 2d vector">LOTTIE</button>
-            <button class="style-pill" data-style="photorealistic, 85mm lens, raw photo">REALISTIC</button>
-            <button class="style-pill" data-style="watercolor painting, loose brush strokes">WATERCOLOR</button>
-            <button class="style-pill" data-style="sticker design, die-cut, white border">STICKER</button>
+      <div class="glass-card">
+        <div class="section-header">
+          <div class="icon-box" style="color: #8b5cf6;">🎨</div>
+          <div class="header-text">
+            <h3>Visual Style</h3>
+            <p>Tambahkan bumbu visual</p>
+          </div>
         </div>
-        <input type="text" id="manual-style-input" class="manual-style-input" style="margin-top: 10px;" placeholder="+ Tambah style manual di sini...">
+        <div class="style-pills">
+          <div class="style-pill" data-style="Cinematic lighting">Cinematic</div>
+          <div class="style-pill" data-style="Ultra detailed 8k">8K Detail</div>
+          <div class="style-pill" data-style="Cyberpunk aesthetic">Cyberpunk</div>
+          <div class="style-pill" data-style="Anime style">Anime</div>
+        </div>
+      </div>
     </div>
 
-    <div class="glass-card">
-        <div class="section-header">
-            <div class="icon-box" style="color: #f59e0b;">⚙️</div>
-            <div class="header-text"><h3>Robot Settings</h3><p>Konfigurasi Auto-Download</p></div>
+    <!-- TAB: QUEUE -->
+    <div id="tab-queue" class="tab-content" style="display: none;">
+      <div class="glass-card">
+        <div class="queue-header"
+          style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <div class="header-info">
+            <h3 id="q-count" style="margin: 0; font-size: 14px;">0/0 completed</h3>
+            <p style="margin: 0; font-size: 10px; color: #94a3b8;">Status Antrean Real-time</p>
+          </div>
+          <button id="btn-clear-queue" class="btn-icon"
+            style="background: none; border: none; cursor: pointer; font-size: 16px;">🗑️</button>
         </div>
-        <div class="setting-row"><span>Auto-Download</span><label class="switch"><input type="checkbox" id="set-dl" checked><span class="slider"></span></label></div>
-        <div class="setting-row"><span>Stealth Delay</span><label class="switch"><input type="checkbox" id="set-stealth" checked><span class="slider"></span></label></div>
-        
+        <div class="progress-container"
+          style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; margin-bottom: 15px;">
+          <div id="main-progress" class="progress-fill"
+            style="height: 100%; width: 0%; background: linear-gradient(90deg, #38bdf8, #8b5cf6); transition: width 0.4s ease;">
+          </div>
+        </div>
+        <div id="queue-list" style="max-height: 300px; overflow-y: auto; padding-right: 5px;">
+          <!-- Tasks appear here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: SETTINGS -->
+    <div id="tab-settings" class="tab-content" style="display: none;">
+      <div class="glass-card">
+        <div class="section-header">
+          <div class="icon-box" style="color: #f59e0b;">⚙️</div>
+          <div class="header-text">
+            <h3>Robot Settings</h3>
+            <p>Konfigurasi Auto-Download</p>
+          </div>
+        </div>
+        <div class="setting-row"
+          style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+          <span style="font-size: 12px;">Auto-Download</span>
+          <label class="switch">
+            <input type="checkbox" id="set-dl" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="dropdown-row" style="margin-bottom: 15px;">
+          <div class="dropdown-label" style="font-size: 11px; color: #94a3b8; margin-bottom: 5px;">Target Download /
+            Prompt</div>
+          <select id="set-expected-output" class="glass-select"
+            style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 8px; border-radius: 8px;">
+            <option value="1">1 Gambar</option>
+            <option value="4" selected>4 Gambar</option>
+          </select>
+        </div>
         <div class="dropdown-row">
-            <div class="dropdown-label">Target Download / Prompt</div>
-            <select id="set-expected-output" class="glass-select">
-                <option value="1">1 Gambar</option>
-                <option value="2">2 Gambar</option>
-                <option value="3">3 Gambar</option>
-                <option value="4" selected>4 Gambar</option>
-            </select>
+          <div class="dropdown-label" style="font-size: 11px; color: #94a3b8; margin-bottom: 5px;">Download Quality
+          </div>
+          <select id="set-quality" class="glass-select"
+            style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 8px; border-radius: 8px;">
+            <option value="2k" selected>2K Upscale</option>
+            <option value="4k">4K Extreme</option>
+          </select>
         </div>
-        <div class="dropdown-row">
-            <div class="dropdown-label">Download Quality</div>
-            <select id="set-quality" class="glass-select">
-                <option value="1k">1K Original</option>
-                <option value="2k" selected>2K Upscale</option>
-                <option value="4k">4K Upscale</option>
-            </select>
-        </div>
+      </div>
+    </div>
+
+    <!-- FOOTER ACTIONS -->
+    <div class="footer-btns"
+      style="position: sticky; bottom: 0; background: #020617; padding-top: 15px; display: flex; gap: 10px;">
+      <button class="btn-main btn-start" id="start-btn"
+        style="flex: 2; padding: 12px; background: linear-gradient(135deg, #38bdf8, #2563eb); border: none; border-radius: 12px; color: white; font-weight: bold; cursor: pointer;">Hajar
+        Prompt</button>
+      <button class="btn-main btn-stop" id="stop-btn"
+        style="flex: 1; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #94a3b8; cursor: pointer;">Stop</button>
     </div>
   </div>
 
-  <div class="footer-btns">
-    <button class="btn-main btn-start" id="start-btn">Hajar Prompt</button>
-    <button class="btn-main btn-stop" id="stop-btn">Stop</button>
-  </div>
   <script src="panel.js"></script>
 </body>
+
 </html>

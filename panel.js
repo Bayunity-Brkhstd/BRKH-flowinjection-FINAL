@@ -1,306 +1,160 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- UI ELEMENTS ---
-    const modal = document.getElementById('welcome-modal');
-    const closeBtn = document.getElementById('close-modal-btn');
-    if (modal) modal.style.display = 'flex';
-    if (closeBtn) closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
+    // --- TABS LOGIC ---
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            tabBtns.forEach(b => {
+                b.classList.remove('active');
+                b.style.color = '#888';
+                b.style.borderBottomColor = 'transparent';
+            });
+            btn.classList.add('active');
+            btn.style.color = '#fff';
+            btn.style.borderBottomColor = '#38bdf8';
+            const targetId = btn.getAttribute('data-tab');
+            tabContents.forEach(content => {
+                content.style.display = content.id === targetId ? 'block' : 'none';
+            });
+        });
+    });
 
-    const btnOpenFlow = document.getElementById('btn-open-flow');
-    const dropZone = document.getElementById('drop-zone');
-    const dropText = document.getElementById('drop-text');
-    const fileInput = document.getElementById('file-input');
+    // --- UI ELEMENTS ---
     const textInput = document.getElementById('text-input');
     const startBtn = document.getElementById('start-btn');
     const stopBtn = document.getElementById('stop-btn');
     const queueList = document.getElementById('queue-list');
     const qCount = document.getElementById('q-count');
     const btnClear = document.getElementById('btn-clear-queue');
-
-    const stylePills = document.querySelectorAll('.style-pill');
-    stylePills.forEach(p => p.addEventListener('click', () => p.classList.toggle('active')));
+    const mainProgress = document.getElementById('main-progress');
 
     let queue = [];
-    let isRunning = false;
-    let filePrompts = [];
 
-    if (btnOpenFlow) btnOpenFlow.addEventListener('click', () => chrome.tabs.create({ url: "https://labs.google/fx/id/tools/flow/" }));
+    // --- INITIAL LOAD ---
+    chrome.storage.local.get(['brkhQueue', 'lastStatus'], (data) => {
+        if (data.brkhQueue) {
+            queue = data.brkhQueue;
+            renderQueue();
+        }
+    });
 
-    if (dropZone && fileInput) {
-        dropZone.addEventListener('click', () => fileInput.click());
-        fileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                filePrompts = ev.target.result.split('\n').filter(l => l.trim() !== "");
-                dropText.innerText = `${filePrompts.length} Prompts Loaded`;
-            };
-            reader.readAsText(file);
+    // --- SYNC UI DENGAN BACKGROUND ---
+    const wfStatus = document.getElementById('wf-status');
+    const tokenCheck = document.getElementById('token-check');
+    const statusText = document.getElementById('status-text');
+    const statusDot = document.getElementById('status-dot');
+    const connBtn = document.getElementById('conn-status');
+
+    function updateIdentityUI(data) {
+        if (data.apiHeaders && data.workflowId) {
+            if (wfStatus) { wfStatus.innerText = "READY TO INJECT"; wfStatus.style.color = "#4ade80"; }
+            if (tokenCheck) { tokenCheck.style.filter = "grayscale(0%) drop-shadow(0 0 5px #4ade80)"; }
+            if (statusText) { statusText.innerText = "Connected"; statusText.style.color = "#4ade80"; }
+            if (statusDot) { statusDot.style.background = "#4ade80"; statusDot.style.boxShadow = "0 0 8px #4ade80"; }
+        } else {
+            if (wfStatus) { wfStatus.innerText = "Waiting for Identity..."; wfStatus.style.color = "#f59e0b"; }
+            if (tokenCheck) { tokenCheck.style.filter = "grayscale(100%)"; }
+            if (statusText) { statusText.innerText = "Disconnected"; statusText.style.color = "#94a3b8"; }
+            if (statusDot) { statusDot.style.background = "#ef4444"; statusDot.style.boxShadow = "0 0 8px #ef4444"; }
+        }
+    }
+
+    if (connBtn) {
+        connBtn.addEventListener('click', () => {
+            window.open('https://labs.google/fx/flow', '_blank');
         });
     }
 
-    if (btnClear) {
-        btnClear.addEventListener('click', () => {
-            if (!isRunning) { queue = []; renderQueue(); }
-            else alert("Robot lagi jalan bos!");
-        });
-    }
+    chrome.storage.local.get(['brkhQueue', 'lastStatus', 'apiHeaders', 'workflowId'], (data) => {
+        if (data.brkhQueue) {
+            queue = data.brkhQueue;
+            renderQueue();
+        }
+        updateIdentityUI(data);
+    });
+
+    chrome.storage.onChanged.addListener((changes) => {
+        if (changes.brkhQueue) {
+            queue = changes.brkhQueue.newValue;
+            renderQueue();
+        }
+        if (changes.apiHeaders || changes.workflowId) {
+            chrome.storage.local.get(['apiHeaders', 'workflowId'], (data) => updateIdentityUI(data));
+        }
+        if (changes.lastStatus) {
+            console.log("BG Status:", changes.lastStatus.newValue);
+        }
+    });
 
     function renderQueue() {
         if (!queueList) return;
         let completed = queue.filter(t => t.status === 'DONE').length;
         if (qCount) qCount.innerText = `${completed}/${queue.length} completed`;
-        const progressFill = document.getElementById('main-progress');
-        if (progressFill) progressFill.style.width = queue.length === 0 ? '0%' : `${(completed / queue.length) * 100}%`;
+        if (mainProgress) mainProgress.style.width = queue.length === 0 ? '0%' : `${(completed / queue.length) * 100}%`;
 
         queueList.innerHTML = queue.map((t, idx) => {
-            let iconSvg = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">';
-            if (t.status === 'RUN') iconSvg += '<path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"></path>';
-            else if (t.status === 'DONE') iconSvg += '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>';
-            else if (t.status === 'FAIL') iconSvg += '<circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line>';
-            else iconSvg += '<circle cx="12" cy="12" r="10"></circle>';
-            iconSvg += '</svg>';
-
             const statusClass = t.status === 'RUN' ? 'running' : t.status === 'DONE' ? 'done' : t.status === 'FAIL' ? 'fail' : '';
-            const statusText = t.status === 'RUN' ? 'Sedang Diproses' : t.status === 'DONE' ? 'Selesai' : t.status === 'FAIL' ? `Gagal: ${t.errorMsg || 'Error'}` : 'Dalam Antrean';
-
             return `
             <div class="task-item ${statusClass}" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px;">
-                <div class="${statusClass === 'running' ? 'text-blue-400' : statusClass === 'done' ? 'text-green-400' : 'text-gray-400'}">${iconSvg}</div>
                 <div style="flex-grow: 1; overflow: hidden;">
                     <div style="font-size: 11px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: white;">${t.text}</div>
-                    <div style="font-size: 9px; color: ${t.status === 'FAIL' ? '#fca5a5' : '#94a3b8'}; margin-top: 4px;">Task #${idx + 1} • ${statusText}</div>
+                    <div style="font-size: 9px; color: ${t.status === 'FAIL' ? '#fca5a5' : '#94a3b8'};">Task #${idx + 1} • ${t.status}</div>
                 </div>
             </div>`;
         }).join('');
     }
 
+    // --- COMMANDS ---
     if (startBtn) {
         startBtn.addEventListener('click', () => {
-            const manual = textInput ? textInput.value.split('\n').filter(l => l.trim() !== "") : [];
-            const combined = [...filePrompts, ...manual];
-            if (combined.length === 0 && queue.length === 0) return alert("Prompt kosong!");
-            combined.forEach(p => queue.push({ text: p, status: 'WAIT' }));
-            if (textInput) textInput.value = "";
-            filePrompts = [];
-            isRunning = true; renderQueue(); processQueue();
-        });
-    }
-
-    if (stopBtn) stopBtn.addEventListener('click', () => { isRunning = false; alert("Autopilot Berhenti"); });
-
-    async function processQueue() {
-        for (let i = 0; i < queue.length; i++) {
-            if (!isRunning) break;
-            if (queue[i].status !== 'WAIT') continue;
-            
-            queue[i].status = 'RUN'; renderQueue();
-
-            // GABUNGKAN PROMPT
-            const visualStyle = document.getElementById('set-visual-style')?.value || "";
-            const activeStyles = Array.from(document.querySelectorAll('.style-pill.active')).map(p => p.dataset.style);
-            const manualStyle = document.getElementById('manual-style-input')?.value.trim();
-            
-            let modifierArr = [];
-            if (visualStyle) modifierArr.push(visualStyle);
-            if (activeStyles.length > 0) modifierArr.push(activeStyles.join(', '));
-            if (manualStyle) modifierArr.push(manualStyle);
-
-            let finalPrompt = queue[i].text;
-            if (modifierArr.length > 0) {
-                finalPrompt += ", " + modifierArr.join(', ');
-            }
-
+            const lines = textInput.value.split('\n').filter(l => l.trim() !== "");
             const settings = {
-                prompt: finalPrompt,
-                dl: document.getElementById('set-dl')?.checked ?? true,
-                expectedOutputs: document.getElementById('set-expected-output')?.value || '4', 
                 quality: document.getElementById('set-quality')?.value || '2k',
-                isLast: (i === queue.length - 1)
+                expectedOutputs: document.getElementById('set-expected-output')?.value || '4'
             };
 
-            try {
-                const tabs = await chrome.tabs.query({ url: "*://labs.google/*" });
-                if (tabs.length === 0) { alert("Buka tab Google Labs dulu!"); isRunning = false; queue[i].status = 'WAIT'; renderQueue(); break; }
+            if (lines.length === 0 && queue.length === 0) return alert("Prompt kosong!");
 
-                const results = await chrome.scripting.executeScript({
-                    target: { tabId: tabs[0].id },
-                    world: "MAIN",
-                    func: injectAutomationTurbo,
-                    args: [settings]
-                });
-
-                const result = results?.[0]?.result;
-                if (!result || !result.success) throw new Error(result?.error || 'Gagal eksekusi script');
-
-            } catch (err) {
-                console.error('Task failed:', err);
-                queue[i].status = 'FAIL';
-                queue[i].errorMsg = err.message;
+            // Tambah ke antrean & simpan settings
+            lines.forEach(p => queue.push({ text: p, status: 'WAIT' }));
+            chrome.storage.local.set({ brkhQueue: queue, brkhSettings: settings }, () => {
+                chrome.runtime.sendMessage({ action: "START_QUEUE", prompts: queue });
+                textInput.value = "";
                 renderQueue();
-                continue; 
-            }
-
-            if (!isRunning) { queue[i].status = 'WAIT'; renderQueue(); break; }
-            queue[i].status = 'DONE'; renderQueue();
-
-            const stealthCheckbox = document.getElementById('set-stealth');
-            if (!settings.isLast && isRunning && stealthCheckbox && stealthCheckbox.checked) {
-                 await new Promise(r => setTimeout(r, 2000));
-            }
-        }
-        isRunning = false;
-    }
-});
-
-// ==============================================================================
-// 🚀 INJECTOR ENGINE (BACK TO ROOTS - THE ORIGINAL WORKING SCRIPT)
-// ==============================================================================
-async function injectAutomationTurbo(s) {
-    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-    
-    function showOverlay(msg) {
-        let o = document.getElementById('brkh-overlay');
-        if (!o) {
-            o = document.createElement('div'); o.id = 'brkh-overlay';
-            o.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);backdrop-filter:blur(10px);z-index:9999999;display:flex;align-items:center;justify-content:center;color:white;font-family:sans-serif;text-align:center;";
-            o.innerHTML = `<div style="background:#0f172a;border:1px solid #38bdf8;padding:30px;border-radius:24px;box-shadow:0 0 30px rgba(56,189,248,0.2);"><h2 style="color:#38bdf8;margin:0 0 10px;text-transform:uppercase;">BRKH Hybrid Engine</h2><p id="brkh-msg" style="font-weight:bold;"></p></div>`;
-            document.body.appendChild(o);
-        }
-        document.getElementById('brkh-msg').textContent = msg;
-    }
-
-    const getMediaElements = () => Array.from(document.querySelectorAll('img, video')).filter(el => el.src && !el.src.includes('avatar') && !el.src.includes('icon') && !el.src.includes('logo') && !el.src.startsWith('data:image/svg'));
-
-    try {
-        // =====================================================================
-        // 1. INJECT PROMPT (PAKAI JALUR LAMA YANG SUKSES)
-        // =====================================================================
-        showOverlay("✍️ Injecting Prompt...");
-        
-        const editor = document.querySelector('[data-slate-editor="true"]');
-        if (!editor) throw new Error("Area Prompt (Editor) tidak ditemukan.");
-        
-        // Cari React Fiber Key
-        const fiberKey = Object.keys(editor).find(k => k.startsWith('__reactFiber'));
-        if (!fiberKey) throw new Error("Gagal bypass React (Fiber key hilang).");
-
-        // Eksekusi Hapus & Tulis Murni
-        let slate = editor[fiberKey];
-        let injected = false;
-        while(slate) {
-            if (slate.memoizedProps?.editor?.children) {
-                const sl = slate.memoizedProps.editor;
-                const txt = sl.children[0]?.children[0]?.text || '';
-                if (txt.length > 0) sl.apply({ type: 'remove_text', path: [0,0], offset: 0, text: txt });
-                
-                sl.apply({ type: 'insert_text', path: [0,0], offset: 0, text: s.prompt }); 
-                injected = true;
-                break;
-            }
-            slate = slate.return;
-        }
-
-        if (!injected) throw new Error("Gagal menyuntikkan prompt ke dalam Slate.");
-        await sleep(500);
-
-        // Pancing sedikit biar tombol generate aktif (Simulasi manusia nekan spasi lalu hapus)
-        editor.focus();
-        document.execCommand('insertText', false, ' ');
-        document.execCommand('delete', false, null);
-        await sleep(500);
-
-        const initialSrcs = getMediaElements().map(m => m.src);
-
-        // =====================================================================
-        // 2. TEKAN TOMBOL GENERATE
-        // =====================================================================
-        showOverlay("🚀 Eksekusi Generate...");
-        
-        let btn = Array.from(document.querySelectorAll('button')).find(b => {
-             const i = b.querySelector('i');
-             return i && i.textContent.trim() === 'arrow_forward' && !b.disabled;
+                document.querySelector('.tab-btn[data-tab="tab-queue"]').click();
+            });
         });
-        
-        if (!btn) {
-             // Fallback kalau nggak nemu arrow_forward
-             btn = Array.from(document.querySelectorAll('button')).find(b => {
-                 const text = b.textContent.toLowerCase();
-                 const aria = (b.getAttribute('aria-label') || '').toLowerCase();
-                 return (text.includes('generate') || text.includes('buat') || aria.includes('generate')) && !b.disabled;
-             });
-        }
-
-        if (btn) {
-            btn.click();
-        } else {
-             // Kalau masih ngumpet, pencet enter di editornya
-             showOverlay("⚠️ Maksa pakai tombol ENTER...");
-             editor.focus();
-             editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true }));
-        }
-
-        await sleep(1500); // Tunggu sistem Google merespon
-
-        // =====================================================================
-        // 3. TUNGGU RENDER & DOWNLOAD
-        // =====================================================================
-        if (s.dl) {
-            const targetDownloads = parseInt(s.expectedOutputs, 10) || 1; 
-            let downloadedCount = 0;
-            
-            showOverlay(`⌛ Menunggu Render Selesai (Target: ${targetDownloads} Hasil)...`);
-            let elapsed = 0;
-            
-            while(elapsed < 150000 && downloadedCount < targetDownloads) {
-                await sleep(1500); elapsed += 1500;
-                
-                const currentMedia = getMediaElements();
-                const newMediaList = currentMedia.filter(m => !initialSrcs.includes(m.src) && !m.dataset.downloaded);
-                
-                for (let newMedia of newMediaList) {
-                    showOverlay(`💾 Mendownload (${downloadedCount + 1}/${targetDownloads}) Resolusi ${s.quality.toUpperCase()}...`);
-                    const rect = newMedia.getBoundingClientRect();
-                    newMedia.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, clientX: rect.left + rect.width / 2, clientY: rect.top + rect.height / 2, button: 2 }));
-                    await sleep(1200); 
-                    
-                    const downloadMenu = document.querySelector('[data-radix-menu-content][data-state="open"], [role="menu"]');
-                    if (downloadMenu) {
-                        const dlBtn = Array.from(downloadMenu.querySelectorAll('[role="menuitem"], button')).find(a => a.textContent.toLowerCase().includes("download") || a.textContent.toLowerCase().includes("save") || a.textContent.toLowerCase().includes("simpan"));
-                        
-                        if (dlBtn) {
-                            dlBtn.click(); 
-                            await sleep(1000);
-                            
-                            const resMenus = Array.from(document.querySelectorAll('[data-radix-menu-content][data-state="open"], [role="menu"]'));
-                            const resM = resMenus[resMenus.length - 1]; 
-                            if (resM) {
-                                const resBtn = Array.from(resM.querySelectorAll('button, [role="menuitem"]')).find(b => b.textContent.toLowerCase().includes(s.quality.toLowerCase()));
-                                if (resBtn) resBtn.click();
-                            }
-                        }
-                    }
-                    
-                    newMedia.dataset.downloaded = "true"; 
-                    downloadedCount++;
-                    
-                    if (downloadedCount >= targetDownloads) break;
-                    await sleep(1500); 
-                }
-            }
-            if (downloadedCount === 0) {
-                throw new Error("Timeout! Gambar baru tidak muncul setelah 2.5 menit.");
-            }
-        }
-
-        // =====================================================================
-        // 4. JEDA AMAN
-        // =====================================================================
-        if (!s.isLast) { showOverlay("⏳ Cooling-down 15 detik (Anti-Ban)..."); await sleep(15000); }
-        document.getElementById('brkh-overlay')?.remove();
-        return { success: true };
-    } catch (e) { 
-        document.getElementById('brkh-overlay')?.remove(); 
-        return { success: false, error: e.message }; 
     }
-}
+
+    if (stopBtn) {
+        stopBtn.addEventListener('click', () => {
+            chrome.runtime.sendMessage({ action: "STOP_QUEUE" });
+            alert("Autopilot Berhenti");
+        });
+    }
+
+    if (btnClear) {
+        btnClear.addEventListener('click', () => {
+            queue = [];
+            chrome.storage.local.set({ brkhQueue: [] }, () => renderQueue());
+        });
+    }
+
+    // --- STYLE PILLS LOGIC ---
+    const stylePills = document.querySelectorAll('.style-pill');
+    stylePills.forEach(pill => {
+        pill.addEventListener('click', () => {
+            const style = pill.getAttribute('data-style');
+            pill.classList.toggle('active');
+
+            if (pill.classList.contains('active')) {
+                // Tambahkan style ke textarea
+                if (textInput.value.length > 0 && !textInput.value.endsWith(' ')) textInput.value += ', ';
+                textInput.value += style;
+            } else {
+                // Hapus style dari textarea (sederhana)
+                textInput.value = textInput.value.replace(', ' + style, '').replace(style, '');
+            }
+        });
+    });
+});

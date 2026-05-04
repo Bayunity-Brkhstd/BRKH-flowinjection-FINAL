@@ -5,13 +5,60 @@
     "action": {
       "type": "modifyHeaders",
       "responseHeaders": [
-        { "header": "Access-Control-Allow-Origin", "operation": "set", "value": "*" },
-        { "header": "Access-Control-Allow-Methods", "operation": "set", "value": "GET, PUT, POST, DELETE, HEAD, OPTIONS" }
+        {
+          "header": "Access-Control-Allow-Origin",
+          "operation": "set",
+          "value": "https://labs.google"
+        },
+        {
+          "header": "Access-Control-Allow-Methods",
+          "operation": "set",
+          "value": "GET, PUT, POST, DELETE, HEAD, OPTIONS, PATCH"
+        },
+        {
+          "header": "Access-Control-Allow-Headers",
+          "operation": "set",
+          "value": "*"
+        },
+        {
+          "header": "Access-Control-Allow-Credentials",
+          "operation": "set",
+          "value": "true"
+        }
+      ]
+    },
+    "condition": {
+      "urlFilter": "*://*.googleapis.com/*",
+      "resourceTypes": [
+        "xmlhttprequest",
+        "sub_frame",
+        "main_frame",
+        "script"
+      ]
+    }
+  },
+  {
+    "id": 3,
+    "priority": 1,
+    "action": {
+      "type": "modifyHeaders",
+      "responseHeaders": [
+        {
+          "header": "Content-Security-Policy",
+          "operation": "remove"
+        },
+        {
+          "header": "X-Content-Security-Policy",
+          "operation": "remove"
+        }
       ]
     },
     "condition": {
       "urlFilter": "*://labs.google/*",
-      "resourceTypes": ["xmlhttprequest", "sub_frame", "main_frame", "script"]
+      "resourceTypes": [
+        "main_frame",
+        "sub_frame"
+      ]
     }
   }
 ]
