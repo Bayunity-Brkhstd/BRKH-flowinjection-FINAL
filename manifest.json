@@ -14,7 +14,8 @@
     "activeTab",
     "declarativeNetRequest",
     "webRequest",
-    "downloads"
+    "downloads",
+    "cookies"
   ],
   "host_permissions": [
     "*://labs.google/*",

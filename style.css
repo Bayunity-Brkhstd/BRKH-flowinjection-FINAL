@@ -275,3 +275,11 @@ textarea:focus {
   background: var(--glass-border);
   border-radius: 10px;
 }
+
+.check-item.active {
+  color: #fff !important;
+}
+.check-item.active .check-dot {
+  background: #4ade80 !important;
+  box-shadow: 0 0 8px #4ade80;
+}

@@ -29,17 +29,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let queue = [];
 
+    // --- SENSOR CHECKLIST ---
+    function updateChecklist(data) {
+        const cHeaders = document.getElementById('check-headers');
+        const cWorkflow = document.getElementById('check-workflow');
+        const cProject = document.getElementById('check-project');
+        const cPayload = document.getElementById('check-payload');
+
+        if (data.apiHeaders) cHeaders.classList.add('active'); else cHeaders.classList.remove('active');
+        if (data.workflowId) cWorkflow.classList.add('active'); else cWorkflow.classList.remove('active');
+        if (data.workspaceId) cProject.classList.add('active'); else cProject.classList.remove('active');
+        if (data.apiPayloadRaw) cPayload.classList.add('active'); else cPayload.classList.remove('active');
+    }
+
     // --- SYNC STATUS ---
     function updateIdentityUI(data) {
-        const isConnected = data.apiHeaders && data.workflowId;
+        updateChecklist(data);
+        const isConnected = data.apiHeaders && data.workflowId && data.workspaceId && data.apiPayloadRaw;
+        
         if (isConnected) {
             if (statusText) { statusText.innerText = "Connected"; statusText.style.color = "#4ade80"; }
             if (statusDot) { statusDot.style.background = "#4ade80"; statusDot.style.boxShadow = "0 0 8px #4ade80"; }
-            if (wfStatus) { wfStatus.innerText = "Status: READY TO INJECT"; wfStatus.style.color = "#4ade80"; }
+            if (wfStatus) { wfStatus.innerText = "READY TO INJECT"; wfStatus.style.color = "#4ade80"; }
         } else {
-            if (statusText) { statusText.innerText = "Disconnected"; statusText.style.color = "#94a3b8"; }
-            if (statusDot) { statusDot.style.background = "#ef4444"; statusDot.style.boxShadow = "0 0 8px #ef4444"; }
-            if (wfStatus) { wfStatus.innerText = "Status: Waiting for Identity..."; wfStatus.style.color = "#f59e0b"; }
+            if (statusText) { statusText.innerText = "Incomplete"; statusText.style.color = "#f59e0b"; }
+            if (statusDot) { statusDot.style.background = "#f59e0b"; statusDot.style.boxShadow = "0 0 8px #f59e0b"; }
+            if (wfStatus) { wfStatus.innerText = "Waiting for Identity..."; wfStatus.style.color = "#f59e0b"; }
         }
     }
 
@@ -50,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Load initial data
-    chrome.storage.local.get(['brkhQueue', 'apiHeaders', 'workflowId'], (data) => {
+    chrome.storage.local.get(['brkhQueue', 'apiHeaders', 'workflowId', 'workspaceId', 'apiPayloadRaw'], (data) => {
         if (data.brkhQueue) {
             queue = data.brkhQueue;
             renderQueue();
@@ -64,9 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
             queue = changes.brkhQueue.newValue;
             renderQueue();
         }
-        if (changes.apiHeaders || changes.workflowId) {
-            chrome.storage.local.get(['apiHeaders', 'workflowId'], (data) => updateIdentityUI(data));
-        }
+        chrome.storage.local.get(['apiHeaders', 'workflowId', 'workspaceId', 'apiPayloadRaw'], (data) => updateIdentityUI(data));
     });
 
     function renderQueue() {
@@ -93,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const newItems = lines.map(p => ({ text: p, status: 'WAIT' }));
         queue = [...queue, ...newItems];
-
+        
         chrome.storage.local.set({ brkhQueue: queue }, () => {
             chrome.runtime.sendMessage({ action: "START_QUEUE", prompts: queue });
             textInput.value = "";
@@ -110,6 +123,20 @@ document.addEventListener('DOMContentLoaded', () => {
         btnClear.addEventListener('click', () => {
             queue = [];
             chrome.storage.local.set({ brkhQueue: [] }, () => renderQueue());
+        });
+    }
+
+    const resetBtn = document.getElementById('btn-reset-project');
+    if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+            resetBtn.innerText = "RESETTING...";
+            resetBtn.disabled = true;
+            chrome.runtime.sendMessage({ action: "FORCE_RESET" }, (res) => {
+                setTimeout(() => {
+                    resetBtn.innerText = "🔄 FORCE PROJECT RESET (DE)";
+                    resetBtn.disabled = false;
+                }, 3000);
+            });
         });
     }
 });
