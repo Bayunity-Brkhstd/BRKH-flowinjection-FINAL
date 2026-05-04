@@ -22,16 +22,24 @@ chrome.webRequest.onBeforeRequest.addListener(
 // --- KOMANDO PUSAT ---
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "IDENTITY_CAPTURED") {
-        console.log("🕵️‍♂️ Identity Captured from Spy!");
+        console.log("Identity Captured from Spy.js");
+
+        let workspaceId = null;
         let projectMatch = request.url.match(/projects\/([^\/]+)/);
-        let workspaceId = projectMatch ? projectMatch[1] : null;
-        if (!workspaceId && request.pageUrl) {
-            projectMatch = request.pageUrl.match(/project\/([^\/\?]+)/);
-            workspaceId = projectMatch ? projectMatch[1] : null;
+        if (projectMatch) {
+            workspaceId = projectMatch[1];
+        } else if (request.pageUrl) {
+            // Fallback: Cari di URL Tab (e.g. .../flow/id/XYZ)
+            let tabMatch = request.pageUrl.match(/\/flow\/id\/([^\/\?]+)/) || request.pageUrl.match(/\/projects\/([^\/\?]+)/);
+            if (tabMatch) workspaceId = tabMatch[1];
         }
+
         let updateData = { apiHeaders: request.headers };
-        if (workspaceId) updateData.workspaceId = workspaceId;
-        
+        if (workspaceId) {
+            updateData.workspaceId = workspaceId;
+            console.log("Workspace ID Captured:", workspaceId);
+        }
+
         chrome.storage.local.set(updateData, () => {
             startHeartbeat();
             checkAndResume();
@@ -92,7 +100,7 @@ async function startWorker(workerId) {
                 const backoff = Math.min(retryCount * 30000, 300000); // Max 5 mins
                 const current = await chrome.storage.local.get(['currentIndex']);
                 await chrome.storage.local.set({ currentIndex: Math.max(0, current.currentIndex - 1) });
-                updateTaskStatus(taskIdx, 'WAIT', `Rate limited. Retrying in ${backoff/1000}s...`);
+                updateTaskStatus(taskIdx, 'WAIT', `Rate limited. Retrying in ${backoff / 1000}s...`);
                 await new Promise(r => setTimeout(r, backoff));
             } else if (err.message.includes("AUTH_MISSING")) {
                 const current = await chrome.storage.local.get(['currentIndex']);
@@ -143,7 +151,7 @@ async function processTask(prompt, data) {
 
     if (res.status === 429) throw new Error("429: Too Many Requests");
     if (res.status === 401 || res.status === 403) throw new Error("AUTH_MISSING: Session expired");
-    
+
     const text = await res.text();
     // BLUEPRINT STEP: Strip Prefix )]}'
     const json = safeParse(text);
@@ -174,7 +182,7 @@ async function pollForImageUrl(mediaId, headers, settings) {
 function safeParse(text) {
     let clean = text;
     if (text.startsWith(")]}'")) clean = text.substring(text.indexOf('\n') + 1);
-    try { return JSON.parse(clean); } catch(e) { return {}; }
+    try { return JSON.parse(clean); } catch (e) { return {}; }
 }
 
 function findMediaId(obj) {
