@@ -158,3 +158,4 @@ Jika terdapat perubahan pada berkas sumber di dalam folder `reference/`, pengemb
    node restore_ui.js
    ```
 5. Hasil kompilasi berupa file [background.js](file:///d:/AI%20PROJECT/brkh%20turbo%20flow/background.js), [sidepanel.html](file:///d:/AI%20PROJECT/brkh%20turbo%20flow/sidepanel.html), [sidepanel.js](file:///d:/AI%20PROJECT/brkh%20turbo%20flow/sidepanel.js), dan [style.css](file:///d:/AI%20PROJECT/brkh%20turbo%20flow/style.css) akan diperbarui secara otomatis di direktori utama dan siap untuk dimuat kembali (Reload) ke peramban Google Chrome melalui menu `chrome://extensions/` (*Load unpacked*).
+dsadadwasd
